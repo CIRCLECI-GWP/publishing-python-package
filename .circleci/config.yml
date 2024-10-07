@@ -2,47 +2,52 @@ version: 2.1
 jobs:
   build_test:
     docker:
-      - image: cimg/python:3.11.0
+      - image: cimg/python:3.12
     steps:
       - checkout # checkout source code to working directory
       - run:
-          command: | # create whl and use pipenv to install dependencies
-            python3 setup.py sdist bdist_wheel
+          command: | # create whl, remove 'convrsn' folder, install dependency - pytest library
             sudo add-apt-repository universe -y
             sudo apt-get update
             sudo apt install -y python3-pip
             sudo pip install pipenv
-            pipenv install dist/convsn-0.0.3-py3-none-any.whl
+            pipenv install build
+            pipenv run python3 -m build
+            rm -rf convrsn
             pipenv install pytest
+            pipenv install dist/convrsn-0.0.5-py3-none-any.whl
       - run:
           command: | # Run test suite
+            echo "Running test suite"
             pipenv run pytest
   test_pypi_publish:
     docker:
-      - image: cimg/python:3.11.0
+      - image: cimg/python:3.12
     steps:
       - checkout # checkout source code to working directory
       - run:
           command: | # create whl, install twine and publish to Test PyPI
-            python3 setup.py sdist bdist_wheel
             sudo add-apt-repository universe -y
             sudo apt-get update
             sudo apt install -y python3-pip
             sudo pip install pipenv
+            pipenv install build
+            pipenv run python3 -m build
             pipenv install twine
             pipenv run twine upload --repository testpypi dist/*
   pypi_publish:
     docker:
-      - image: cimg/python:3.11.0
+      - image: cimg/python:3.12
     steps:
       - checkout # checkout source code to working directory
       - run:
           command: | # create whl, install twine and publish to PyPI
-            python3 setup.py sdist bdist_wheel
             sudo add-apt-repository universe -y
             sudo apt-get update
             sudo apt install -y python3-pip
             sudo pip install pipenv
+            pipenv install build
+            pipenv run python3 -m build
             pipenv install twine
             pipenv run twine upload dist/*
 workflows:
